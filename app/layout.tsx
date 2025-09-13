@@ -1,33 +1,33 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { PlaygroundProvider } from '../lib/playground-context';
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
-
 export const metadata: Metadata = {
-  title: 'JS Learning Playground',
+  title: 'JavaScript Learning Playground',
   description:
-    'A simple JavaScript Playground to experiment with HTML, CSS, and JavaScript. Great for testing small snippets, learning DOM manipulation, and building interactive demos.',
+    'Interactive JavaScript tutorial and reference with live code execution',
+  keywords: [
+    'JavaScript',
+    'tutorial',
+    'learning',
+    'playground',
+    'interactive',
+    'coding',
+    'programming',
+  ],
+  authors: [{ name: 'JavaScript Playground' }],
+  viewport: 'width=device-width, initial-scale=1',
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
+      <body>
+        <PlaygroundProvider>{children}</PlaygroundProvider>
       </body>
     </html>
   );
