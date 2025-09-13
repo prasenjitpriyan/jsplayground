@@ -2,8 +2,8 @@
 
 import { motion } from 'framer-motion';
 import { gsap } from 'gsap';
-import { Maximize2, Menu, Minimize2, Settings } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { Settings } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { CodeEditor } from '../components/CodeEditor';
 import { ConceptHeader } from '../components/ConceptHeader';
 import { Logo } from '../components/Logo';
@@ -16,6 +16,7 @@ import { javascriptConcepts } from '../utils/data-concepts';
 export default function PlaygroundPage() {
   const pageRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   const {
     currentCategory,
@@ -35,6 +36,22 @@ export default function PlaygroundPage() {
 
   const currentConceptData =
     javascriptConcepts[currentCategory]?.[currentConcept];
+
+  // Handle responsive layout
+  useEffect(() => {
+    const handleResize = () => {
+      const newIsDesktop = window.innerWidth >= 1024;
+      setIsDesktop(newIsDesktop);
+    };
+
+    // Initial check
+    handleResize();
+
+    // Add listener
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (!pageRef.current || !headerRef.current) return;
@@ -75,7 +92,7 @@ export default function PlaygroundPage() {
   if (!currentConceptData) {
     return (
       <motion.div
-        className="min-h-screen bg-gradient-to-br from-primary-50 via-blue-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center"
+        className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}>
         <div className="text-center space-y-4">
@@ -101,7 +118,7 @@ export default function PlaygroundPage() {
       opacity: 1,
       transition: {
         duration: 0.6,
-        when: 'beforeChildren',
+        when: 'beforeChildren' as const,
         staggerChildren: 0.1,
       },
     },
@@ -119,6 +136,11 @@ export default function PlaygroundPage() {
     },
   };
 
+  // Determine if sidebar should affect layout
+  // Desktop: Always account for sidebar space (even if toggleable)
+  // Mobile: Only when actually open
+  const shouldAccountForSidebar = isDesktop || isSidebarOpen;
+
   return (
     <motion.div
       ref={pageRef}
@@ -131,7 +153,7 @@ export default function PlaygroundPage() {
         {Array.from({ length: 8 }).map((_, i) => (
           <motion.div
             key={i}
-            className="bg-particle absolute w-2 h-2 bg-primary-400/20 dark:bg-primary-500/20 rounded-full"
+            className="bg-particle absolute w-2 h-2 bg-blue-400/20 dark:bg-blue-500/20 rounded-full"
             style={{
               left: `${10 + i * 12}%`,
               top: `${20 + (i % 3) * 30}%`,
@@ -159,11 +181,17 @@ export default function PlaygroundPage() {
         onConceptSelect={setCurrentConcept}
       />
 
-      {/* Main Content */}
+      {/* Main Content - Fixed responsive layout */}
       <motion.main
         className={cn(
           'transition-all duration-500 ease-in-out min-h-screen',
-          isSidebarOpen ? 'lg:ml-72' : 'lg:ml-0'
+          // Desktop: Always leave space for sidebar (whether open or collapsed)
+          // Mobile: Only leave space when sidebar is actually open
+          isDesktop
+            ? 'lg:ml-72' // Always account for sidebar space on desktop
+            : isSidebarOpen
+            ? 'ml-0' // On mobile when open, no margin (overlay)
+            : 'ml-0' // On mobile when closed, no margin
         )}
         layout>
         {/* Header */}
@@ -174,13 +202,19 @@ export default function PlaygroundPage() {
           <div className="flex items-center justify-between">
             {/* Logo and Title */}
             <div className="flex items-center space-x-4">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}>
-                <Logo size="md" />
-              </motion.div>
+              {/* Conditional margin for mobile to avoid overlap */}
+              <div
+                className={cn(
+                  isDesktop ? 'ml-0' : isSidebarOpen ? 'ml-0' : 'ml-12'
+                )}>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}>
+                  <Logo size="md" />
+                </motion.div>
+              </div>
               <div className="hidden sm:block">
-                <h1 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   JavaScript Playground
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -191,28 +225,16 @@ export default function PlaygroundPage() {
 
             {/* Header Actions */}
             <div className="flex items-center space-x-2 lg:space-x-4">
-              {/* Mobile Menu Toggle */}
-              <motion.button
-                onClick={toggleSidebar}
-                className="lg:hidden p-2 rounded-xl bg-white dark:bg-gray-800 shadow-md border border-gray-200 dark:border-gray-700"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}>
-                <Menu className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-              </motion.button>
-
               {/* Desktop Sidebar Toggle */}
-              <motion.button
-                onClick={toggleSidebar}
-                className="hidden lg:flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-white dark:hover:bg-gray-800 rounded-xl transition-all duration-200 border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}>
-                <span>{isSidebarOpen ? 'Hide' : 'Show'} Sidebar</span>
-                {isSidebarOpen ? (
-                  <Minimize2 className="w-4 h-4" />
-                ) : (
-                  <Maximize2 className="w-4 h-4" />
-                )}
-              </motion.button>
+              {isDesktop && (
+                <motion.button
+                  onClick={toggleSidebar}
+                  className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-white dark:hover:bg-gray-800 rounded-xl transition-all duration-200 border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}>
+                  <span>{isSidebarOpen ? 'Hide' : 'Show'} Sidebar</span>
+                </motion.button>
+              )}
 
               {/* Settings Button */}
               <motion.button

@@ -1,6 +1,12 @@
 'use client';
 
-import { createContext, useCallback, useContext, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import { PlaygroundContextType } from '../types/types-index';
 import { javascriptConcepts } from '../utils/data-concepts';
 
@@ -21,19 +27,40 @@ interface PlaygroundProviderProps {
 }
 
 export function PlaygroundProvider({ children }: PlaygroundProviderProps) {
-  const [currentCategory, setCurrentCategory] = useState<string>('Basics');
-  const [currentConcept, setCurrentConceptState] =
-    useState<string>('Variables');
-  const [code, setCode] = useState<string>(
-    javascriptConcepts.Basics.Variables.code
-  );
-  const [originalCode, setOriginalCode] = useState<string>(
+  const [currentCategory, setCurrentCategory] = useState('Basics');
+  const [currentConcept, setCurrentConceptState] = useState('Variables');
+  const [code, setCode] = useState(javascriptConcepts.Basics.Variables.code);
+  const [originalCode, setOriginalCode] = useState(
     javascriptConcepts.Basics.Variables.code
   );
   const [output, setOutput] = useState<string[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
-  const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  // Handle responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      const newIsDesktop = window.innerWidth >= 1024;
+
+      // If transitioning from mobile to desktop, ensure sidebar state is correct
+      if (!isDesktop && newIsDesktop) {
+        // When moving to desktop, sidebar should be open
+        setIsSidebarOpen(true);
+      }
+
+      setIsDesktop(newIsDesktop);
+    };
+
+    // Initial check
+    handleResize();
+
+    // Add listener
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isDesktop]);
 
   const setCurrentConcept = useCallback((category: string, concept: string) => {
     const newCode = javascriptConcepts[category][concept].code;

@@ -18,12 +18,11 @@ export function CodeEditor({
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const runButtonRef = useRef<HTMLButtonElement>(null);
-
-  // ✅ Track focus state instead of checking editorRef directly
   const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
     if (!toolbarRef.current) return;
+
     const toolbar = toolbarRef.current;
     const buttons = toolbar.querySelectorAll('button');
 
@@ -37,6 +36,7 @@ export function CodeEditor({
 
   useEffect(() => {
     if (!runButtonRef.current) return;
+
     const button = runButtonRef.current;
 
     if (isRunning) {
@@ -56,6 +56,7 @@ export function CodeEditor({
 
   const handleRunClick = () => {
     onRun();
+
     if (runButtonRef.current) {
       gsap.to(runButtonRef.current, {
         scale: 1.05,
@@ -101,9 +102,9 @@ export function CodeEditor({
 
           <div className="flex items-center space-x-2 ml-4">
             <motion.div
-              className="p-1.5 bg-primary-100 dark:bg-primary-900/30 rounded-lg"
+              className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg"
               whileHover={{ rotate: 5 }}>
-              <Code className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+              <Code className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             </motion.div>
             <div>
               <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -142,7 +143,7 @@ export function CodeEditor({
             disabled={isRunning}
             className={cn(
               'flex items-center space-x-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 shadow-md relative overflow-hidden group',
-              'bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700',
+              'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700',
               'text-white disabled:opacity-70 disabled:cursor-not-allowed',
               'transform hover:scale-105 active:scale-95'
             )}
@@ -185,7 +186,7 @@ export function CodeEditor({
             {lineNumbers.map((lineNumber) => (
               <motion.div
                 key={lineNumber}
-                className="h-6 flex items-center justify-end hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200"
+                className="h-6 flex items-center justify-end hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: lineNumber * 0.01 }}>
@@ -206,9 +207,9 @@ export function CodeEditor({
             className={cn(
               'w-full h-96 p-4 bg-transparent resize-none code-editor',
               'text-gray-900 dark:text-gray-100 leading-6',
-              'focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-inset',
+              'focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-inset',
               'placeholder-gray-400 dark:placeholder-gray-500',
-              'selection:bg-primary-500/20'
+              'selection:bg-blue-500/20'
             )}
             placeholder="// Write your JavaScript code here..."
             spellCheck={false}
@@ -220,8 +221,10 @@ export function CodeEditor({
             transition={{ duration: 0.3, delay: 0.6 }}
           />
 
-          {/* Syntax Highlighting Overlay (placeholder for real implementation) */}
-          <div className="absolute inset-0 pointer-events-none p-4 font-mono text-sm leading-6 whitespace-pre-wrap overflow-hidden" />
+          {/* Syntax Highlighting Overlay (simplified) */}
+          <div className="absolute inset-0 pointer-events-none p-4 font-mono text-sm leading-6 whitespace-pre-wrap overflow-hidden">
+            {/* This would contain syntax highlighted code in a real implementation */}
+          </div>
 
           {/* Focus Ring Animation */}
           <motion.div
@@ -250,7 +253,7 @@ export function CodeEditor({
             className="flex items-center space-x-1"
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 2, repeat: Infinity }}>
-            <Zap className="w-3 h-3 text-primary-500" />
+            <Zap className="w-3 h-3 text-blue-500" />
             <span>Live Editor</span>
           </motion.div>
         </div>
