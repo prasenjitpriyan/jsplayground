@@ -2,10 +2,24 @@
 
 import { AnimatePresence, motion, Variants } from 'framer-motion';
 import { gsap } from 'gsap';
-import { ChevronRight, Code2, Menu, Sparkles, X } from 'lucide-react';
+import { ChevronRight, Code2, Sparkles, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '../lib/utils';
 import { SidebarProps } from '../types/types-index';
+
+// Custom hook to detect desktop viewport
+function useIsDesktop(breakpoint = 1024) {
+  const [isDesktop, setIsDesktop] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= breakpoint);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [breakpoint]);
+
+  return isDesktop;
+}
 
 export function Sidebar({
   isOpen,
@@ -18,31 +32,32 @@ export function Sidebar({
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set([currentCategory])
   );
+
   const sidebarRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+  const isDesktop = useIsDesktop();
 
+  // Animate sidebar open/close with GSAP
   useEffect(() => {
     if (!sidebarRef.current || !headerRef.current) return;
 
     const sidebar = sidebarRef.current;
     const header = headerRef.current;
 
-    if (isOpen) {
-      // Animate sidebar entrance
+    if (isOpen || isDesktop) {
       gsap.fromTo(
         sidebar,
         { x: -320, opacity: 0 },
         { x: 0, opacity: 1, duration: 0.4, ease: 'power3.out' }
       );
 
-      // Animate header elements
       gsap.fromTo(
         header.children,
         { y: -20, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.3, stagger: 0.1, delay: 0.2 }
       );
     }
-  }, [isOpen]);
+  }, [isOpen, isDesktop]);
 
   const toggleCategory = (category: string) => {
     const newExpanded = new Set(expandedCategories);
@@ -57,12 +72,11 @@ export function Sidebar({
   const handleConceptSelect = (category: string, concept: string) => {
     onConceptSelect(category, concept);
     // Auto-close sidebar on mobile after selection
-    if (window.innerWidth < 1024) {
+    if (!isDesktop) {
       setTimeout(() => onToggle(), 300);
     }
   };
 
-  // ✅ Typed variants
   const sidebarVariants: Variants = {
     open: {
       x: 0,
@@ -87,25 +101,16 @@ export function Sidebar({
     closed: { opacity: 0 },
   };
 
-  // ✅ Fixed nested transitions
   const categoryVariants: Variants = {
     open: {
       height: 'auto',
       opacity: 1,
-      transition: {
-        stiffness: 400,
-        damping: 40,
-        opacity: { duration: 0.2, delay: 0.1 },
-      },
+      transition: { duration: 0.2 },
     },
     closed: {
       height: 0,
       opacity: 0,
-      transition: {
-        stiffness: 400,
-        damping: 40,
-        opacity: { duration: 0.2 },
-      },
+      transition: { duration: 0.2 },
     },
   };
 
@@ -113,9 +118,9 @@ export function Sidebar({
     <>
       {/* Mobile Backdrop */}
       <AnimatePresence>
-        {isOpen && (
+        {!isDesktop && isOpen && (
           <motion.div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
             variants={backdropVariants}
             initial="closed"
             animate="open"
@@ -127,7 +132,7 @@ export function Sidebar({
 
       {/* Sidebar */}
       <AnimatePresence>
-        {(isOpen || window.innerWidth >= 1024) && (
+        {(isOpen || isDesktop) && (
           <motion.aside
             ref={sidebarRef}
             className={cn(
@@ -139,7 +144,7 @@ export function Sidebar({
             )}
             variants={sidebarVariants}
             initial="closed"
-            animate={isOpen ? 'open' : 'closed'}
+            animate={isOpen || isDesktop ? 'open' : 'closed'}
             exit="closed">
             {/* Header */}
             <div
@@ -162,25 +167,27 @@ export function Sidebar({
                 </div>
               </div>
 
-              <motion.button
-                onClick={onToggle}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 lg:hidden transition-colors"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}>
-                <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              </motion.button>
+              {!isDesktop && (
+                <motion.button
+                  onClick={onToggle}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}>
+                  <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                </motion.button>
+              )}
             </div>
 
             {/* Navigation */}
             <nav className="p-4 overflow-y-auto h-[calc(100vh-100px)] custom-scrollbar">
               <div className="space-y-2">
                 {Object.entries(concepts).map(
-                  ([categoryName, categoryData], categoryIndex) => (
+                  ([categoryName, categoryData], idx) => (
                     <motion.div
                       key={categoryName}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: categoryIndex * 0.1 }}>
+                      transition={{ delay: idx * 0.1 }}>
                       {/* Category Header */}
                       <motion.button
                         onClick={() => toggleCategory(categoryName)}
@@ -256,7 +263,6 @@ export function Sidebar({
                                     </div>
                                   </div>
 
-                                  {/* Active indicator */}
                                   {currentCategory === categoryName &&
                                     currentConcept === conceptName && (
                                       <motion.div
@@ -270,7 +276,6 @@ export function Sidebar({
                                       />
                                     )}
 
-                                  {/* Hover gradient */}
                                   <motion.div
                                     className="absolute inset-0 bg-gradient-to-r from-primary-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                     initial={false}
@@ -286,61 +291,9 @@ export function Sidebar({
                 )}
               </div>
             </nav>
-
-            {/* Footer */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-gray-50 to-transparent dark:from-gray-900 dark:to-transparent">
-              <div className="text-xs text-center text-gray-500 dark:text-gray-400">
-                <motion.div
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="flex items-center justify-center space-x-1">
-                  <Sparkles className="w-3 h-3" />
-                  <span>Interactive Learning</span>
-                </motion.div>
-              </div>
-            </div>
           </motion.aside>
         )}
       </AnimatePresence>
-
-      {/* Mobile Toggle Button */}
-      <motion.button
-        onClick={onToggle}
-        className={cn(
-          'fixed top-4 left-4 z-50 p-3 rounded-xl shadow-lg lg:hidden',
-          'bg-white/90 dark:bg-gray-900/90 backdrop-blur-md',
-          'border border-gray-200/50 dark:border-gray-700/50',
-          'transition-all duration-300'
-        )}
-        whileHover={{ scale: 1.05, rotate: 5 }}
-        whileTap={{ scale: 0.95 }}
-        animate={{
-          x: isOpen ? 320 : 0,
-          rotate: isOpen ? 180 : 0,
-        }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}>
-        <AnimatePresence mode="wait">
-          {isOpen ? (
-            <motion.div
-              key="close"
-              initial={{ opacity: 0, rotate: -90 }}
-              animate={{ opacity: 1, rotate: 0 }}
-              exit={{ opacity: 0, rotate: 90 }}
-              transition={{ duration: 0.2 }}>
-              <X className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="menu"
-              initial={{ opacity: 0, rotate: 90 }}
-              animate={{ opacity: 1, rotate: 0 }}
-              exit={{ opacity: 0, rotate: -90 }}
-              transition={{ duration: 0.2 }}>
-              <Menu className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.button>
     </>
   );
 }
