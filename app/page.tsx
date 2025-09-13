@@ -2,13 +2,13 @@
 
 import { motion } from 'framer-motion';
 import { gsap } from 'gsap';
-import { Settings } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { CodeEditor } from '../components/CodeEditor';
 import { ConceptHeader } from '../components/ConceptHeader';
 import { Logo } from '../components/Logo';
 import { OutputPanel } from '../components/OutputPanel';
 import { Sidebar } from '../components/Sidebar';
+import { ThemeToggle } from '../components/ThemeToggle';
 import { usePlayground } from '../lib/playground-context';
 import { cn } from '../lib/utils';
 import { javascriptConcepts } from '../utils/data-concepts';
@@ -92,7 +92,7 @@ export default function PlaygroundPage() {
   if (!currentConceptData) {
     return (
       <motion.div
-        className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center"
+        className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center transition-colors duration-500"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}>
         <div className="text-center space-y-4">
@@ -136,15 +136,10 @@ export default function PlaygroundPage() {
     },
   };
 
-  // Determine if sidebar should affect layout
-  // Desktop: Always account for sidebar space (even if toggleable)
-  // Mobile: Only when actually open
-  const shouldAccountForSidebar = isDesktop || isSidebarOpen;
-
   return (
     <motion.div
       ref={pageRef}
-      className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 relative overflow-hidden"
+      className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 relative overflow-hidden transition-colors duration-500"
       variants={pageVariants}
       initial="hidden"
       animate="visible">
@@ -153,7 +148,7 @@ export default function PlaygroundPage() {
         {Array.from({ length: 8 }).map((_, i) => (
           <motion.div
             key={i}
-            className="bg-particle absolute w-2 h-2 bg-blue-400/20 dark:bg-blue-500/20 rounded-full"
+            className="bg-particle absolute w-2 h-2 bg-blue-400/20 dark:bg-blue-500/20 rounded-full transition-colors duration-300"
             style={{
               left: `${10 + i * 12}%`,
               top: `${20 + (i % 3) * 30}%`,
@@ -181,28 +176,21 @@ export default function PlaygroundPage() {
         onConceptSelect={setCurrentConcept}
       />
 
-      {/* Main Content - Fixed responsive layout */}
+      {/* Main Content */}
       <motion.main
         className={cn(
           'transition-all duration-500 ease-in-out min-h-screen',
-          // Desktop: Always leave space for sidebar (whether open or collapsed)
-          // Mobile: Only leave space when sidebar is actually open
-          isDesktop
-            ? 'lg:ml-72' // Always account for sidebar space on desktop
-            : isSidebarOpen
-            ? 'ml-0' // On mobile when open, no margin (overlay)
-            : 'ml-0' // On mobile when closed, no margin
+          isDesktop ? 'lg:ml-72' : 'ml-0'
         )}
         layout>
         {/* Header */}
         <motion.header
           ref={headerRef}
-          className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 px-4 sm:px-6 lg:px-8 py-4 sticky top-0 z-30"
+          className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 px-4 sm:px-6 lg:px-8 py-4 sticky top-0 z-30 transition-colors duration-300"
           variants={sectionVariants}>
           <div className="flex items-center justify-between">
             {/* Logo and Title */}
             <div className="flex items-center space-x-4">
-              {/* Conditional margin for mobile to avoid overlap */}
               <div
                 className={cn(
                   isDesktop ? 'ml-0' : isSidebarOpen ? 'ml-0' : 'ml-12'
@@ -214,10 +202,10 @@ export default function PlaygroundPage() {
                 </motion.div>
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
                   JavaScript Playground
                 </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300">
                   Interactive Learning Environment
                 </p>
               </div>
@@ -225,24 +213,8 @@ export default function PlaygroundPage() {
 
             {/* Header Actions */}
             <div className="flex items-center space-x-2 lg:space-x-4">
-              {/* Desktop Sidebar Toggle */}
-              {isDesktop && (
-                <motion.button
-                  onClick={toggleSidebar}
-                  className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-white dark:hover:bg-gray-800 rounded-xl transition-all duration-200 border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}>
-                  <span>{isSidebarOpen ? 'Hide' : 'Show'} Sidebar</span>
-                </motion.button>
-              )}
-
-              {/* Settings Button */}
-              <motion.button
-                className="p-2 rounded-xl bg-white dark:bg-gray-800 shadow-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-                whileHover={{ scale: 1.05, rotate: 90 }}
-                whileTap={{ scale: 0.95 }}>
-                <Settings className="w-5 h-5" />
-              </motion.button>
+              {/* Theme Toggle */}
+              <ThemeToggle />
             </div>
           </div>
         </motion.header>
@@ -285,8 +257,8 @@ export default function PlaygroundPage() {
           <motion.div
             className="relative overflow-hidden"
             variants={sectionVariants}>
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-pink-900/20 rounded-2xl" />
-            <div className="relative bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border border-blue-200/50 dark:border-blue-800/50 rounded-2xl p-6 lg:p-8">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-pink-900/20 rounded-2xl transition-colors duration-500" />
+            <div className="relative bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border border-blue-200/50 dark:border-blue-800/50 rounded-2xl p-6 lg:p-8 transition-colors duration-300">
               <div className="flex items-start space-x-4">
                 <motion.div
                   className="flex-shrink-0 p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl"
@@ -305,7 +277,7 @@ export default function PlaygroundPage() {
                 </motion.div>
 
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 transition-colors duration-300">
                     💡 Interactive Learning Tips
                   </h3>
 
@@ -332,13 +304,13 @@ export default function PlaygroundPage() {
                         text: 'Navigate through different concepts using the sidebar',
                       },
                       {
-                        icon: '⚡',
-                        text: 'Experiment freely - this is a safe learning environment!',
+                        icon: '🌗',
+                        text: 'Cycle through light, dark, and system themes with the toggle',
                       },
                     ].map((tip, index) => (
                       <motion.div
                         key={index}
-                        className="flex items-start space-x-3 p-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50"
+                        className="flex items-start space-x-3 p-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50 transition-colors duration-300"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 + 1 }}
@@ -347,7 +319,7 @@ export default function PlaygroundPage() {
                           backgroundColor: 'rgba(59, 130, 246, 0.05)',
                         }}>
                         <span className="text-lg">{tip.icon}</span>
-                        <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">
+                        <span className="text-sm text-gray-700 dark:text-gray-300 flex-1 transition-colors duration-300">
                           {tip.text}
                         </span>
                       </motion.div>
@@ -361,13 +333,13 @@ export default function PlaygroundPage() {
 
         {/* Footer */}
         <motion.footer
-          className="mt-12 px-4 sm:px-6 lg:px-8 py-6 border-t border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm"
+          className="mt-12 px-4 sm:px-6 lg:px-8 py-6 border-t border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm transition-colors duration-300"
           variants={sectionVariants}>
-          <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+          <div className="text-center text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300">
             <p>Built with ❤️ for JavaScript learners everywhere</p>
             <p className="mt-1 opacity-70">
-              Next.js 15 • React 19 • TypeScript • Tailwind CSS v4 • GSAP •
-              Framer Motion
+              Next.js 14 • React 18 • TypeScript • Tailwind CSS • GSAP • Framer
+              Motion • Next Themes
             </p>
           </div>
         </motion.footer>
